@@ -60,6 +60,7 @@ async function createUser({
       ON CONFLICT (name) DO NOTHING
       RETURNING *;
       `, tagList)
+      console.log('WWWWWWWWWW: ', tags);
       return tags
     } catch (error) {
       console.error(error)
@@ -199,6 +200,15 @@ async function getAllUsers() {
     return rows;
   }
 
+async function getAllTags() {
+    const { rows } = await client.query(
+      `SELECT *  
+      FROM tags;
+    `);
+  
+    return rows;
+  }
+
   async function getAllPosts() {
     const { rows: postIds } = await client.query(
       `SELECT * 
@@ -273,5 +283,6 @@ module.exports = {
     getUserById,
     addTagsToPost,
     createTags, 
-    getPostsByTagName
+    getPostsByTagName,
+    getAllTags
   }
