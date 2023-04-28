@@ -15,7 +15,6 @@ async function createUser({
       ON CONFLICT (username) DO NOTHING 
       RETURNING *;
     `, [username, password, name, location]);
-  
       return user;
     } catch (error) {
       console.log(error)
@@ -100,6 +99,13 @@ async function createUser({
         FROM posts
         WHERE id=$1;
       `, [postId]);
+
+      if (!post) {
+        throw {
+          name: "PostNotFoundError",
+          message: "Could not find a post with that postId"
+        };
+      }
   
       const { rows: tags } = await client.query(`
         SELECT tags.*
@@ -161,7 +167,7 @@ async function updatePost(postId, fields = {}) {
   delete fields.tags;
   const keys = Object.keys(fields);
   setString = keys.map((key, index) => `"${key}"=$${index + 1}`).join(', ');
-
+  console.log('TTTTTTTTTT: ', postId)
   try {
     if(setString.length > 0) {
       await client.query(`
@@ -229,14 +235,28 @@ async function getAllTags() {
         WHERE tags.name=$1;
       `, [tagName]);
   
-      return await Promise.all(postIds.map(
+      const posts = await Promise.all(postIds.map(
         post => getPostById(post.id)
-      ));
+        ));
+        return posts
     } catch (error) {
       throw error;
     }
   } 
   
+  async function getUserByUsername(username) {
+    try {
+      const { rows: [user] } = await client.query(`
+        SELECT *
+        FROM users
+        WHERE username=$1;
+      `, [username]);
+  
+      return user;
+    } catch (error) {
+      throw error;
+    }
+  }
 
   async function getPostsByUser(id) {
     try {
@@ -284,5 +304,7 @@ module.exports = {
     addTagsToPost,
     createTags, 
     getPostsByTagName,
-    getAllTags
+    getAllTags,
+    getUserByUsername,
+    getPostById
   }
